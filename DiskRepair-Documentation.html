@@ -1,0 +1,342 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DiskRepair Documentation</title>
+<style>
+  :root {
+    --bg: #f8f9fb; --surface: #ffffff; --text: #1f2937; --muted: #6b7280; --border: #e2e5ea;
+    --accent: #1d4ed8; --accent-bg: #e8eefc; --danger: #b00020; --danger-bg: #fdecef;
+    --warn: #a16207; --warn-bg: #fdf5e0; --ok: #15803d; --ok-bg: #e7f6ec; --code-bg: #f0f2f6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12151b; --surface: #1a1e26; --text: #e5e7eb; --muted: #9aa3b2; --border: #2b313c;
+      --accent: #7ea2ff; --accent-bg: #1c2740; --danger: #ff6b81; --danger-bg: #3a1a21;
+      --warn: #e5b94a; --warn-bg: #352b12; --ok: #4ade80; --ok-bg: #14301f; --code-bg: #232833;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-padding-top: 16px; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 16px/1.6 "Segoe UI", system-ui, -apple-system, sans-serif; }
+  .layout { display: flex; max-width: 1180px; margin: 0 auto; }
+  nav { position: sticky; top: 0; align-self: flex-start; height: 100vh; overflow-y: auto;
+        width: 250px; flex: none; padding: 28px 16px 28px 24px; border-right: 1px solid var(--border); }
+  nav .brand { font-weight: 700; font-size: 18px; margin-bottom: 4px; }
+  nav .ver { color: var(--muted); font-size: 13px; margin-bottom: 18px; }
+  nav a { display: block; padding: 5px 10px; margin: 1px 0; border-radius: 6px; color: var(--muted);
+          text-decoration: none; font-size: 14.5px; }
+  nav a:hover { background: var(--accent-bg); color: var(--accent); }
+  main { flex: 1; min-width: 0; padding: 36px 32px 80px; }
+  h1 { font-size: 34px; margin: 0 0 6px; letter-spacing: -0.5px; }
+  h2 { font-size: 24px; margin: 48px 0 12px; padding-top: 8px; border-top: 1px solid var(--border); }
+  h3 { font-size: 18px; margin: 28px 0 8px; }
+  p { margin: 10px 0; }
+  .lead { font-size: 18px; color: var(--muted); margin-top: 0; }
+  a { color: var(--accent); }
+  code, pre, kbd { font-family: Consolas, "Cascadia Mono", monospace; }
+  code { background: var(--code-bg); padding: 1px 6px; border-radius: 4px; font-size: 0.9em; }
+  pre { background: var(--code-bg); padding: 14px 16px; border-radius: 8px; overflow-x: auto;
+        font-size: 14px; line-height: 1.5; border: 1px solid var(--border); }
+  pre code { background: none; padding: 0; }
+  table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 15px;
+          background: var(--surface); border: 1px solid var(--border); border-radius: 8px; }
+  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { background: var(--code-bg); font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+  tr:last-child td { border-bottom: none; }
+  .table-wrap { overflow-x: auto; }
+  .callout { border-left: 4px solid var(--accent); background: var(--accent-bg); padding: 12px 16px;
+             border-radius: 0 8px 8px 0; margin: 16px 0; }
+  .callout.danger { border-color: var(--danger); background: var(--danger-bg); }
+  .callout.warn { border-color: var(--warn); background: var(--warn-bg); }
+  .callout.ok { border-color: var(--ok); background: var(--ok-bg); }
+  .callout strong:first-child { display: block; margin-bottom: 2px; }
+  .tag { display: inline-block; font-size: 12px; font-weight: 600; padding: 1px 8px; border-radius: 999px;
+         white-space: nowrap; }
+  .tag.ro { background: var(--ok-bg); color: var(--ok); }
+  .tag.undo { background: var(--warn-bg); color: var(--warn); }
+  .tag.write { background: var(--accent-bg); color: var(--accent); }
+  .tag.erase { background: var(--danger-bg); color: var(--danger); }
+  .steps { counter-reset: s; list-style: none; padding: 0; }
+  .steps li { counter-increment: s; position: relative; padding: 4px 0 12px 46px; }
+  .steps li::before { content: counter(s); position: absolute; left: 0; top: 2px; width: 30px; height: 30px;
+        border-radius: 50%; background: var(--accent); color: #fff; font-weight: 700; text-align: center;
+        line-height: 30px; font-size: 14px; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; margin: 16px 0; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+  .card h4 { margin: 0 0 4px; font-size: 16px; }
+  .card p { margin: 4px 0; color: var(--muted); font-size: 14.5px; }
+  ul { padding-left: 22px; }
+  li { margin: 4px 0; }
+  footer { margin-top: 56px; color: var(--muted); font-size: 14px; border-top: 1px solid var(--border); padding-top: 16px; }
+  @media (max-width: 860px) {
+    .layout { display: block; }
+    nav { position: static; height: auto; width: auto; border-right: none; border-bottom: 1px solid var(--border);
+          padding: 16px; display: flex; flex-wrap: wrap; gap: 4px; }
+    nav .brand, nav .ver { width: 100%; margin: 0; }
+    main { padding: 24px 16px 60px; }
+    h1 { font-size: 28px; }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+<nav>
+  <div class="brand">DiskRepair</div>
+  <div class="ver">Version 1.0.0 · Documentation</div>
+  <a href="#overview">Overview</a>
+  <a href="#install">Requirements &amp; start-up</a>
+  <a href="#safety">The safety guard</a>
+  <a href="#workflow">Recommended workflow</a>
+  <a href="#interface">The interface</a>
+  <a href="#diagnosis">Diagnosis tab</a>
+  <a href="#repair">Repair tab</a>
+  <a href="#recover">Recover data tab</a>
+  <a href="#test">Test tab</a>
+  <a href="#scenarios">Common scenarios</a>
+  <a href="#cli">Command line</a>
+  <a href="#data">Where files go</a>
+  <a href="#limits">What software can't fix</a>
+  <a href="#architecture">Architecture</a>
+  <a href="#tests">Running the tests</a>
+  <a href="#troubleshooting">Troubleshooting</a>
+</nav>
+
+<main>
+<h1>DiskRepair</h1>
+<p class="lead">Diagnose, rescue and repair <strong>external</strong> storage on Windows: USB hard disks, flash drives, SD and microSD cards.</p>
+
+<h2 id="overview">Overview</h2>
+<p>DiskRepair is a desktop tool (tkinter GUI plus a small command line) written in pure Python with no third-party dependencies. It talks to the device at the raw-sector level, so it can analyse and repair devices that Windows reports as <em>RAW</em>, "needs formatting", empty, or the wrong size.</p>
+<div class="cards">
+  <div class="card"><h4>Diagnose</h4><p>Read-only inspection of partition tables, boot sectors, filesystems and surface health, ending in a plain-language verdict and an ordered repair plan.</p></div>
+  <div class="card"><h4>Rescue</h4><p>Image a failing device, copy files out with a built-in FAT/exFAT reader, or carve photos, videos and documents by signature.</p></div>
+  <div class="card"><h4>Repair</h4><p>Small undoable fixes first (boot sector, partition table), then CHKDSK, and finally erase-and-format as a last resort.</p></div>
+  <div class="card"><h4>Test</h4><p>Surface scan and a capacity/write test that exposes counterfeit cards and controllers that silently drop writes.</p></div>
+</div>
+
+<h2 id="install">Requirements &amp; start-up</h2>
+<ul>
+  <li>Windows 10 or 11</li>
+  <li>Python 3.9 or newer (standard library only — <strong>nothing to install</strong>); <code>pythonw</code> must be on your <code>PATH</code></li>
+  <li>Administrator rights — raw disk access is impossible without them</li>
+</ul>
+<h3>Starting the program</h3>
+<ol class="steps">
+  <li>Plug in the device you want to work on.</li>
+  <li>Double-click <code>DiskRepair.bat</code> (or <code>DiskRepair.pyw</code>).</li>
+  <li>Accept the Windows administrator (UAC) prompt. If you started without elevation, the program relaunches itself elevated; the header shows <em>"Not running as administrator"</em> in red when elevation is missing.</li>
+  <li>Select your device in the <strong>External devices</strong> list on the left.</li>
+</ol>
+<div class="callout warn"><strong>Antivirus</strong>Security software may flag raw-disk access. If DiskRepair is blocked, add an exclusion for the DiskRepair folder.</div>
+
+<h2 id="safety">The safety guard</h2>
+<p>DiskRepair cannot open an internal disk — by design, with <strong>no override switch</strong>. The guard (<code>diskrepair/safety.py</code>) enforces:</p>
+<ul>
+  <li><strong>Bus type.</strong> Only disks on the <strong>USB, SD, MMC or FireWire</strong> bus are accepted. SATA, NVMe, RAID, SAS, virtual disks and anything unrecognised are refused.</li>
+  <li><strong>Protected disks.</strong> Any disk holding Windows, your user profile, the temp folder or DiskRepair itself is refused, even if it is on USB (e.g. Windows To Go).</li>
+  <li><strong>Checked on the handle.</strong> The check runs on the very handle used for I/O, immediately before every operation, so a device swapped between "select" and "go" is caught.</li>
+  <li><strong>Write fingerprint.</strong> Writing additionally requires the <code>model | serial | size</code> fingerprint of the device you selected, so a re-plugged device that took the same disk number is never written by mistake.</li>
+  <li><strong>PowerShell too.</strong> The PowerShell commands used for formatting repeat the same check on their side.</li>
+</ul>
+<p>Internal disks are counted in the header ("N internal disk(s) hidden and locked out") and are never listed as targets.</p>
+
+<h2 id="workflow">Recommended workflow</h2>
+<ol class="steps">
+  <li><strong>Run the diagnosis.</strong> It is read-only and tells you which of the later steps apply.</li>
+  <li><strong>If the files matter</strong>, use <em>Save rescue image</em> and/or <em>Copy files out</em> <strong>before</strong> any repair.</li>
+  <li><strong>Apply small, undoable repairs</strong> the diagnosis suggests (boot sector, partition table).</li>
+  <li><strong>Last resort:</strong> if nothing else works and the data is safe or not needed, run the <em>Capacity and write test</em>, then <em>Erase and format</em>.</li>
+</ol>
+<div class="callout danger"><strong>Rescue before you repair</strong>Every repair step risks changing the device. If the device holds data you care about, copy it off first — especially if the device is clicking, disconnecting, or showing read errors.</div>
+
+<h2 id="interface">The interface</h2>
+<table>
+  <tr><th>Area</th><th>What it does</th></tr>
+  <tr><td><strong>External devices</strong> (left)</td><td>Lists the permitted external disks. <em>Refresh device list</em> re-scans after plugging or unplugging.</td></tr>
+  <tr><td><strong>Device details</strong> (left)</td><td>Model, serial, bus, size, and the volumes Windows sees on the selected device.</td></tr>
+  <tr><td><strong>Tabs</strong> (right)</td><td>Diagnosis · Repair · Recover data · Test.</td></tr>
+  <tr><td><strong>Progress bar + Cancel</strong></td><td>Long jobs run on a worker thread. Only one job runs at a time; <em>Cancel</em> stops it cleanly.</td></tr>
+  <tr><td><strong>Status line + log</strong></td><td>Live messages. Everything is also appended to <code>DiskRepair-data\logs\diskrepair-YYYYMMDD.log</code>.</td></tr>
+</table>
+
+<h2 id="diagnosis">Diagnosis tab</h2>
+<p>Click <strong>Run diagnosis (read-only)</strong>. Nothing is written to the device. It checks:</p>
+<ul>
+  <li>Partition table (MBR / GPT / superfloppy / none) and each entry's sanity</li>
+  <li>Boot sectors and their backups; FAT, exFAT and NTFS structure</li>
+  <li>A sampled surface read to spot unreadable areas</li>
+  <li>A search for lost partitions that are missing from the table</li>
+</ul>
+<p>Results appear as a list of findings with severity levels, each with detail text when selected:</p>
+<table>
+  <tr><th>Level</th><th>Meaning</th></tr>
+  <tr><td><strong style="color:#b00020">CRITICAL</strong></td><td>Data or device is at immediate risk.</td></tr>
+  <tr><td><strong style="color:#c2410c">PROBLEM</strong></td><td>Something is broken and needs repair.</td></tr>
+  <tr><td><strong style="color:#a16207">WARNING</strong></td><td>Suspicious but may be harmless.</td></tr>
+  <tr><td><strong style="color:#1d4ed8">NOTE</strong></td><td>Informational (e.g. an installer image that looks "unformatted" but is not damaged).</td></tr>
+  <tr><td><strong style="color:#15803d">OK</strong></td><td>The check passed.</td></tr>
+</table>
+<p>Below the findings, <strong>Recommended steps, in order</strong> gives buttons for the repairs that apply. <strong>Show full technical report</strong> opens the complete text report.</p>
+
+<h2 id="repair">Repair tab</h2>
+<div class="table-wrap"><table>
+  <tr><th>Action</th><th>What it does</th><th>Writes?</th></tr>
+  <tr><td><strong>Clear write protection</strong></td><td>Clears the read-only and offline flags Windows holds for the disk and its volumes.</td><td><span class="tag write">Flags only</span></td></tr>
+  <tr><td><strong>Repair filesystem (CHKDSK)</strong></td><td>Runs Windows CHKDSK on the volume to fix directory and allocation errors.</td><td><span class="tag write">Filesystem</span></td></tr>
+  <tr><td><strong>Restore boot sector from backup</strong></td><td>Copies the intact backup boot sector (FAT32, exFAT, NTFS) over a damaged primary one. Fixes most "RAW" / "needs formatting" volumes without losing files.</td><td><span class="tag undo">Few sectors, undoable</span></td></tr>
+  <tr><td><strong>Deep search for lost partitions</strong></td><td>Checks every 1&nbsp;MiB boundary for filesystems missing from the partition table.</td><td><span class="tag ro">Read-only</span></td></tr>
+  <tr><td><strong>Rebuild partition table</strong></td><td>Writes a new MBR or GPT pointing at the filesystems found. Files are not touched.</td><td><span class="tag undo">Few sectors, undoable</span></td></tr>
+  <tr><td><strong>Undo last boot-sector / table change</strong></td><td>Puts back the sectors saved before the most recent metadata repair on this device.</td><td><span class="tag write">Restores saved sectors</span></td></tr>
+  <tr><td><strong>Erase and format</strong></td><td>Wipes old structures, creates a fresh partition and filesystem, then verifies the device stores data.</td><td><span class="tag erase">ERASES ALL DATA</span></td></tr>
+</table></div>
+
+<h3>Undo safety net</h3>
+<p>Before any boot-sector or partition-table write, the sectors being replaced are saved to <code>DiskRepair-data\backups\</code> as a <code>.bin</code> plus a <code>.json</code> manifest (device fingerprint, LBA, note, time). <em>Undo last change</em> restores them. Writes are read back and verified; a write the device silently drops is reported as an error.</p>
+
+<h3>Erase and format</h3>
+<ol class="steps">
+  <li>Click <strong>Erase and format</strong>. A confirmation dialog shows exactly which device will be erased.</li>
+  <li>Choose a <strong>filesystem</strong>:
+    <ul>
+      <li><strong>FAT32</strong> — cameras, consoles, car stereos (files up to 4&nbsp;GB). DiskRepair has its own FAT32 formatter, so it works at any size up to 2&nbsp;TiB, including cards above 32&nbsp;GB that Windows refuses to format as FAT32.</li>
+      <li><strong>exFAT</strong> — large files, cross-platform.</li>
+      <li><strong>NTFS</strong> — Windows-only use.</li>
+      <li><strong>Auto</strong> — FAT32 up to 32&nbsp;GB, exFAT above.</li>
+    </ul></li>
+  <li>Optionally set a <strong>volume label</strong>, and tick <strong>Zero-fill the whole device first</strong> (slow; can revive some flash by forcing every block to be rewritten).</li>
+  <li>Type <code>ERASE</code> to enable the button, then confirm. After formatting, a write-verification test confirms the device really stores data.</li>
+</ol>
+<p>Partitions are aligned for flash (4&nbsp;MiB up to 32&nbsp;GB, 16&nbsp;MiB above) and the scheme is MBR, or GPT for disks of 2&nbsp;TiB and larger.</p>
+
+<h2 id="recover">Recover data tab</h2>
+<p>All recovery actions are <span class="tag ro">read-only</span> on the device. Output is written to another disk — DiskRepair refuses a destination on the device being rescued and checks free space first.</p>
+<div class="table-wrap"><table>
+  <tr><th>Action</th><th>Best for</th><th>Notes</th></tr>
+  <tr><td><strong>Save rescue image</strong></td><td>Failing or unstable devices</td><td>Copies every readable sector to an image file. Bad areas are skipped on the first pass, retried in small pieces, and left as zeros if still unreadable. Work on the image afterwards, sparing the device.</td></tr>
+  <tr><td><strong>Copy files out (built-in reader)</strong></td><td>Volumes Windows won't mount (RAW)</td><td>Reads FAT12/16/32 and exFAT directly, keeping names and folders. Tolerates a damaged FAT. Tick <em>Also recover deleted files</em> to include deleted entries.</td></tr>
+  <tr><td><strong>Recover files by signature</strong></td><td>No filesystem survives</td><td>Carves JPEG, PNG, PDF, ZIP-based Office files, MP4/MOV/HEIC/3GP/M4A/CR3, and RIFF (AVI/WAV/WEBP). Names are lost; fragmented files may come out damaged.</td></tr>
+</table></div>
+<div class="callout"><strong>Work from an image</strong>Use <em>Recover from a saved rescue image instead of the device</em> (Browse… / Clear) to run <em>Copy files out</em> or <em>Recover by signature</em> against an image file. This lets you recover repeatedly without stressing a dying device.</div>
+
+<h2 id="test">Test tab</h2>
+<div class="table-wrap"><table>
+  <tr><th>Action</th><th>What it does</th></tr>
+  <tr><td><strong>Full surface scan</strong> <span class="tag ro">Read-only</span></td><td>Reads the whole device and builds a map of unreadable areas.</td></tr>
+  <tr><td><strong>Capacity and write test</strong> <span class="tag write">Writes test blocks, then restores them</span></td><td>Writes marker blocks across the whole address space on a power-of-two grid, reads them all back, then puts the original contents back. Detects:
+    <ul>
+      <li><strong>"Limbo" fakes</strong> — writes beyond the real capacity are dropped.</li>
+      <li><strong>"Wraparound" fakes</strong> — high address bits are ignored so the space repeats.</li>
+      <li><strong>Stuck controllers</strong> — accept writes without storing them.</li>
+    </ul>
+    The result reports the <em>real usable size</em>. A <em>Thorough</em> option probes every 256&nbsp;MB instead of 32 probes in total.</td></tr>
+</table></div>
+<div class="callout warn"><strong>Fake-capacity cards</strong>No format fixes a counterfeit card. Format it with a size limit (CLI <code>--limit-bytes</code>) only if you accept using the real part — never trust it for important data.</div>
+
+<h2 id="scenarios">Common scenarios</h2>
+<h3>"You need to format the disk before you can use it" (RAW)</h3>
+<ol>
+  <li>Run diagnosis. If it reports a damaged boot sector with an intact backup, choose <strong>Restore boot sector from backup</strong>.</li>
+  <li>If files matter and that fails, use <strong>Copy files out</strong> (works on RAW volumes).</li>
+</ol>
+<h3>Device shows as empty / wrong size / "unallocated"</h3>
+<ol>
+  <li>Run diagnosis; if a lost filesystem is found, <strong>Rebuild partition table</strong>.</li>
+  <li>If it isn't found quickly, run <strong>Deep search for lost partitions</strong> first.</li>
+</ol>
+<h3>Read-only / "disk is write protected"</h3>
+<ol>
+  <li>Check the lock switch on the SD adapter.</li>
+  <li>Run <strong>Clear write protection</strong>. If it stays locked, the controller has gone into end-of-life read-only mode — copy the data off and replace the device.</li>
+</ol>
+<h3>Card holds fewer files than expected / files vanish / "corrupt" after a few GB</h3>
+<ol>
+  <li>Run the <strong>Capacity and write test</strong>. A fake-capacity or dropping controller explains it.</li>
+</ol>
+<h3>Photos from a card that won't open at all</h3>
+<ol>
+  <li><strong>Save rescue image</strong>, then <strong>Recover files by signature</strong> from that image.</li>
+</ol>
+
+<h2 id="cli">Command line</h2>
+<p>The GUI is the main interface; the CLI is for scripting and support. Disk commands need an elevated prompt.</p>
+<pre><code>python -m diskrepair list
+python -m diskrepair diagnose 1                    # disk number
+python -m diskrepair diagnose rescue.img           # or a saved image file
+python -m diskrepair diagnose 1 --deep --json report.json --hexdump
+python -m diskrepair captest 1 --serial ABC123 [--thorough] [--json out.json]
+python -m diskrepair format  1 --serial ABC123 --erase-all-data \
+        [--fs auto|fat32|exfat|ntfs] [--label NAME] [--zero-fill] [--limit-bytes N]
+python -m diskrepair gui                           # the default</code></pre>
+<table>
+  <tr><th>Command</th><th>Purpose</th></tr>
+  <tr><td><code>list</code></td><td>External disks with their volumes, plus the count of protected internal disks and any device problems Windows reports.</td></tr>
+  <tr><td><code>diagnose</code></td><td>Read-only diagnosis of a disk number or an image file. <code>--deep</code> adds a deep partition search; <code>--json FILE</code> saves the report; <code>--hexdump</code> appends the first sector.</td></tr>
+  <tr><td><code>captest</code></td><td>Capacity/write test. Needs <code>--serial</code> as shown by <code>list</code>; the disk must be named by number <em>and</em> serial.</td></tr>
+  <tr><td><code>format</code></td><td>Erase and format. Refuses to run without <code>--erase-all-data</code> and a matching <code>--serial</code>. <code>--limit-bytes</code> confines the partition to the first N bytes (fake-capacity cards).</td></tr>
+</table>
+
+<h2 id="data">Where files go</h2>
+<p>Everything DiskRepair produces is stored in a <code>DiskRepair-data\</code> folder next to the program, and is never allowed onto the device being rescued.</p>
+<table>
+  <tr><th>Folder</th><th>Contents</th></tr>
+  <tr><td><code>DiskRepair-data\recovered\</code></td><td>Files copied out or carved, in one subfolder per run (e.g. <code>microsd-20261110-130015\fat32-volume\…</code>).</td></tr>
+  <tr><td><code>DiskRepair-data\backups\</code></td><td>Saved sectors (<code>.bin</code> + <code>.json</code>) used by <em>Undo</em>, and by the capacity test to restore data.</td></tr>
+  <tr><td><code>DiskRepair-data\logs\</code></td><td>Daily log files <code>diskrepair-YYYYMMDD.log</code>.</td></tr>
+</table>
+<p>Rescue images (<code>diskN-YYYYMMDD-HHMMSS.img</code>) default to <code>DiskRepair-data\images\</code>, but a Save dialog lets you choose any folder on another disk. Images need as much free space as the device is large; the tool checks before starting.</p>
+
+<h2 id="limits">What software cannot fix</h2>
+<ul>
+  <li>A device that <strong>never appears</strong> in the list — it isn't answering on the bus (dead controller, broken connector). Try another port, cable or card reader.</li>
+  <li>A reader that reports <strong>"no media" / zero capacity</strong> with the card inserted.</li>
+  <li>Flash that has <strong>locked itself read-only</strong> at end of life (the write test reports this).</li>
+  <li><strong>Counterfeit capacity.</strong> The test shows the real size; the card cannot be trusted.</li>
+  <li><strong>Physically unreadable sectors.</strong> They can be skipped and mapped, not healed.</li>
+</ul>
+
+<h2 id="architecture">Architecture</h2>
+<p>Source lives in the <code>diskrepair</code> package. The GUI only renders; all disk work runs on a worker thread and reports through a <code>Task</code> object (progress, log, cancel).</p>
+<table>
+  <tr><th>Module</th><th>Role</th></tr>
+  <tr><td><code>safety.py</code></td><td>The external-only guard: bus allow-list, protected-disk detection, write fingerprint.</td></tr>
+  <tr><td><code>winapi.py</code></td><td>Windows API wrappers (handles, storage descriptors, geometry, elevation checks) via <code>ctypes</code>.</td></tr>
+  <tr><td><code>blockdev.py</code></td><td><code>PhysicalDevice</code> (guarded, locks volumes) and <code>ImageDevice</code> (file-backed, used for rescued images and tests).</td></tr>
+  <tr><td><code>devices.py</code></td><td>Enumerates devices and enriches them with what Windows reports.</td></tr>
+  <tr><td><code>layout.py</code></td><td>Parse, validate and build MBR, GPT, and FAT/exFAT/NTFS boot sectors.</td></tr>
+  <tr><td><code>diagnose.py</code></td><td>Turns structure checks into findings, a verdict and an ordered repair plan.</td></tr>
+  <tr><td><code>scan.py</code></td><td>Lost-partition search and surface (bad-sector) scans.</td></tr>
+  <tr><td><code>repair.py</code></td><td>Boot-sector restore, partition-table rebuild, undo, erase/format, write-protection clearing, CHKDSK.</td></tr>
+  <tr><td><code>fat32fmt.py</code></td><td>Own FAT32 formatter for any size up to 2&nbsp;TiB.</td></tr>
+  <tr><td><code>fsread.py</code></td><td>Built-in read-only FAT12/16/32 and exFAT readers.</td></tr>
+  <tr><td><code>rescue.py</code></td><td>Resilient imaging and signature-based carving.</td></tr>
+  <tr><td><code>captest.py</code></td><td>Capacity / write-retention test.</td></tr>
+  <tr><td><code>task.py</code></td><td>Progress, logging and cancellation plumbing.</td></tr>
+  <tr><td><code>cli.py</code>, <code>gui.py</code>, <code>__main__.py</code></td><td>Front ends. <code>DiskRepair.pyw</code> / <code>DiskRepair.bat</code> launch the GUI.</td></tr>
+</table>
+
+<h2 id="tests">Running the tests</h2>
+<pre><code>python -m unittest discover tests -v</code></pre>
+<p>The suite builds <strong>simulated disk images</strong> — lost partition table, destroyed boot sector, bad sectors, fake capacity, stuck controller — and never writes to a physical disk. It covers the safety guard, format and diagnosis, repair and undo, data recovery (FAT32/exFAT extraction, carving, imaging, surface scan) and the capacity test.</p>
+
+<h2 id="troubleshooting">Troubleshooting</h2>
+<table>
+  <tr><th>Symptom</th><th>Cause / fix</th></tr>
+  <tr><td>"Python 3 was not found on PATH"</td><td>Install Python 3.9+ from python.org (tick <em>Add to PATH</em>) and run <code>DiskRepair.bat</code> again.</td></tr>
+  <tr><td>Window never opens</td><td><code>pythonw</code> has no console; start errors are shown in a message box. Run <code>python DiskRepair.pyw</code> from a prompt to see more.</td></tr>
+  <tr><td>"Not running as administrator"</td><td>Close and start again, accepting the UAC prompt.</td></tr>
+  <tr><td>"Access denied"</td><td>Run as administrator, and close any program (Explorer windows, antivirus scans, other tools) that is using the device.</td></tr>
+  <tr><td>"Refused: … is on the SATA/NVMe bus" or "protected"</td><td>Working as intended: internal disks and disks holding Windows or this program are never accessible.</td></tr>
+  <tr><td>"Refused: … no longer the device that was selected"</td><td>The device was unplugged or replaced. Refresh the device list and select it again.</td></tr>
+  <tr><td>"The destination folder is on the device being rescued"</td><td>Move the program (or choose a destination) on a different disk.</td></tr>
+  <tr><td>"The device is write-protected and rejected the write"</td><td>Check the lock switch on the SD adapter, run <em>Clear write protection</em>; if it persists the flash is locked read-only.</td></tr>
+  <tr><td>Device missing from the list</td><td>Click <em>Refresh device list</em>; try another port, cable or reader. Check the header for hidden internal disks to confirm what was filtered.</td></tr>
+</table>
+
+<footer>DiskRepair 1.0.0 · Documentation generated from the project source and README.</footer>
+</main>
+</div>
+</body>
+</html>
